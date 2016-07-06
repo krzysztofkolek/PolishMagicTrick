@@ -1,0 +1,264 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>pixi.js example 1</title>
+    <style>
+        html {
+            height: 100%;
+        }
+        
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+        }
+        
+        canvas {
+            margin-top: 5%;
+            margin-left: 25%;
+        }
+    </style>
+    <script src="./Assets/Lib/pixi.js"></script>
+    <script src="./Assets/Lib/howler.js"></script>
+
+</head>
+
+<body>
+    <script>
+        screenHeight = 500;
+        screenWidth = 1000;
+
+
+
+        var stage = new PIXI.Stage(0xAAF999);
+        // ============================================================================ Background	
+        var landscapeTexture = PIXI.Texture.fromImage('./Assets/background.jpg');
+        var texture2 = new PIXI.Texture(landscapeTexture);
+        var background = new PIXI.Sprite(texture2);
+        stage.addChild(background);
+        // ============================================================================
+
+        // ============================================================================ Table
+        // ====== Bottom
+        var graphics = new PIXI.Graphics();
+        graphics.beginFill(0xe74c3c);
+        //graphics.lineStyle(5, 0xCC6600);
+        graphics.drawRect(150, screenHeight - 200, 700, 200);
+        stage.addChild(graphics);
+
+        graphics.beginFill(0x000000);
+        graphics.lineStyle(5, 0xB93D30);
+        graphics.drawRect(400, screenHeight - 250, 200, 200);
+        stage.addChild(graphics);
+
+        // ====== Top
+        graphics.beginFill(0xB93D30);
+        graphics.lineStyle(5, 0xB93D30);
+        graphics.drawRect(100, screenHeight - 250, 800, 100);
+        stage.addChild(graphics);
+
+
+
+        // ====== Counter
+        var scoreCounter = 0;
+        var scoreText = new PIXI.Text(scoreCounter, {
+            font: '32px Arial',
+            fill: '#ffffff',
+            align: 'center'
+        });
+        scoreText.position.x = 490;
+        scoreText.position.y = 380;
+        stage.addChild(scoreText);
+        // ============================================================================
+
+        // ============================================================================ T Kamel
+        var tKamelImage = PIXI.Texture.fromImage("./Assets/TCam.png");
+        var tKamel = new PIXI.Sprite(tKamelImage);
+        tKamel.anchor.x = 0.5;
+        tKamel.anchor.y = 0.5;
+        tKamel.position.x = 250;
+        tKamel.position.y = screenHeight - 375;
+        stage.addChild(tKamel);
+        // ============================================================================ 
+
+        // ============================================================================ MagicianAndMRogalska
+        var magicianAndMRogalska = new MagicianAndMRogalska(700, screenHeight - 375, 700, 385);
+        // ============================================================================ 
+
+        // ============================================================================ Paper bags
+        var bags = new Bag(0);
+        bags.init();
+        // ============================================================================ 
+
+        // ============================================================================ 
+        document.getElementsByTagName("html")[0].addEventListener("click", displayDate);
+
+        function displayDate() {
+            bags.check(magicianAndMRogalska.getPosition());
+        }
+        // ============================================================================ 
+
+
+
+        var renderer = new PIXI.WebGLRenderer(screenWidth, screenHeight);
+        document.body.appendChild(renderer.view);
+
+        requestAnimFrame(animate);
+        requestAnimationFrame(animate);
+
+        function animate() {
+
+            magicianAndMRogalska.move();
+            bags.createBagsList();
+
+            renderer.render(stage);
+            requestAnimationFrame(animate);
+        }
+        wrongBag = 0;
+
+        function Bag(index) {
+            this.index = index;
+            this.selectedIndex = -1;
+            this.x = 400 + (this.index * 120);
+            this.width = 50;
+            this.bags = [];
+            this.color = 0xFFF;
+
+            this.init = function() {
+                this.bags.push(new Bag(0));
+                this.bags.push(new Bag(1));
+                this.bags.push(new Bag(2));
+            }
+
+            this.getSprite = function(elementindex) {
+                var baggraphic = new PIXI.Graphics();
+                if (this.bags[elementindex] != undefined) {
+                    baggraphic.beginFill(0xF9A114);
+                } else {
+                    baggraphic.beginFill(0xf50057);
+                }
+                baggraphic.lineStyle(5, 0x7C500A);
+                baggraphic.drawRect(this.bags[elementindex].x, screenHeight - 325, this.width, 75);
+                return baggraphic;
+            }
+
+            this.createBagsList = function() {
+                for (var i = 0; i < 3; i++) {
+                    var sprite = this.getSprite(i);
+                    //sprite.color = this.bags[i].color;
+                    stage.addChild(this.getSprite(i));
+
+                };
+
+                var statRemoveIndex = 4;
+                stage.removeChild(stage.children[statRemoveIndex]);
+                stage.removeChild(stage.children[statRemoveIndex]);
+                stage.removeChild(stage.children[statRemoveIndex]);
+            }
+
+            this.colorBags = function() {
+                this.bags.forEach(function(element, index) {
+                    if (wrongBag == element.index) {
+                        if (this.bags.bags[element.index] != undefined) {
+                            //this.bags.bags[element.index].color = 0xf50057;
+                        }
+                    }
+                });
+            };
+
+            this.checkIfCorectBag = function(index) {
+                if (index == wrongBag) {
+                    return true;
+                }
+                return false;
+            };
+
+            this.check = function(position) {
+
+                for (var i = 0, len = this.bags.length; i < len; i++) {
+                    var element = this.bags[i];
+                    if (position >= element.x && position <= element.x + element.width) {
+                        if (this.checkIfCorectBag(element.index)) {
+                            scoreCounter = 0;
+                            scoreText.text = '' + Math.floor(scoreCounter);
+                            scoreText.updateText();
+                            var sound = new Howl({
+                                urls: ['./Assets/przepraszam.mp3']
+                            }).play();
+                        } else {
+                            scoreText.text = '' + Math.floor(++scoreCounter);
+                            scoreText.updateText();
+                        }
+                        this.colorBags();
+                        this.selectedIndex = index;
+                        this.selectedIndex = -1;
+                    }
+                }
+            }
+
+
+        }
+
+
+        function MagicianAndMRogalska(x, y, leftBorder, rightBorder) {
+            this.x = x;
+            this.y = y;
+            this.offsetValue = 1;
+            this.whereToMove = false;
+            this.leftBorder = leftBorder;
+            this.rightBorder = rightBorder;
+
+            this.moveLeft = function() {
+                this.x += this.offsetValue;
+            }
+            this.moveRight = function() {
+                this.x -= this.offsetValue;
+            }
+            this.move = function() {
+                if (this.leftBorder == this.x) {
+                    this.whereToMove = false;
+                } else if (this.rightBorder == this.x) {
+                    this.whereToMove = true;
+                }
+
+                if (this.whereToMove) {
+                    this.moveLeft();
+                } else {
+                    this.moveRight();
+                }
+
+                var magicianAndMRogalskaImage = PIXI.Texture.fromImage("./Assets/MAndRog.png");
+                var magicianAndMRogalskaSprite = new PIXI.Sprite(magicianAndMRogalskaImage);
+                magicianAndMRogalskaSprite.anchor.x = 0.5;
+                magicianAndMRogalskaSprite.anchor.y = 0.5;
+                magicianAndMRogalskaSprite.position.x = this.x;
+                magicianAndMRogalskaSprite.position.y = screenHeight - 375;
+
+                if (stage.children[7] != undefined) {
+                    stage.removeChild(stage.children[6]);
+                    stage.removeChild(stage.children[7]);
+                }
+
+                stage.addChild(magicianAndMRogalskaSprite);
+
+                var magicianAndMRogalskaHandsImage = PIXI.Texture.fromImage("./Assets/Hands.png");
+                var magicianAndMRogalskaHandsSprite = new PIXI.Sprite(magicianAndMRogalskaHandsImage);
+                magicianAndMRogalskaHandsSprite.anchor.x = 0.5;
+                magicianAndMRogalskaHandsSprite.anchor.y = 0.5;
+                magicianAndMRogalskaHandsSprite.position.x = this.x;
+                magicianAndMRogalskaHandsSprite.position.y = screenHeight - 330;
+
+                stage.addChild(magicianAndMRogalskaHandsSprite);
+            }
+
+            this.getPosition = function() {
+                return this.x;
+            }
+        }
+    </script>
+
+</body>
+
+</html>
